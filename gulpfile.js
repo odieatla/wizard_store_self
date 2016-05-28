@@ -6,16 +6,6 @@ const sourcemaps = require('gulp-sourcemaps');
 const nodemon = require('gulp-nodemon');
 const eslint = require('gulp-eslint');
 
-gulp.task('babel', () => {
-  return gulp.src('/src/**/*.babel.js')
-    .pipe(sourcemaps.init())
-    .pipe(babel({
-      presets: ['es2015']
-    }))
-    .pipe(sourcemaps.write())
-    .pipe(gulp.dest('dest/'));
-});
-
 gulp.task('lint', () => {
   return gulp.src(['**/*.js', '!node_modules/**'])
     .pipe(eslint({
@@ -26,13 +16,23 @@ gulp.task('lint', () => {
     .pipe(eslint.failAfterError());
 });
 
-gulp.task('server', () => {
+gulp.task('babel', ['lint'], () => {
+  return gulp.src('/src/**/*.babel.js')
+    .pipe(sourcemaps.init())
+    .pipe(babel({
+      presets: ['es2015']
+    }))
+    .pipe(sourcemaps.write())
+    .pipe(gulp.dest('dest/'));
+});
+
+gulp.task('build', ['lint', 'babel']);
+
+gulp.task('server', ['build'],() => {
   return nodemon({
     script: 'app.js',
     ignore: ['node_modules/'],
     ext: 'js css',
-    tasks: ['lint'] // tasks listed here only run before re-build, not the first-time build
+    tasks: ['build'] // tasks listed here only run before re-build, not the first-time build
   });
 });
-
-gulp.task('build', ['lint', 'server']);
